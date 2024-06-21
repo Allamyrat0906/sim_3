@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Working Hot-Air Engine Simulation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        max-width: 800px;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      canvas {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+
+      button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: white;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Working Hot-Air Engine Simulation</h1>
+      <canvas id="engineCanvas" width="600" height="400"></canvas>
+      <button onclick="startSimulation()">Start Engine</button>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("engineCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const engine = {
+        temperature: 300, // Initial temperature in Kelvin (example)
+        pistonY: canvas.height / 2,
+        pistonSpeed: 0,
+        pistonAcceleration: 0,
+        cylinderWidth: 200,
+        cylinderHeight: 300,
+        pistonWidth: 180,
+        pistonHeight: 20,
+        crankAngle: 0,
+        crankRadius: 80,
+        crankCenterX: 300,
+        crankCenterY: 200,
+        valveX: 400,
+        valveY: 200,
+        valveWidth: 30,
+        valveHeight: 80,
+        valveAngle: 0,
+        valveOpen: false,
+        heatSourceTemperature: 500, // Temperature of the heat source in Kelvin (example)
+        heatLossRate: 0.005, // Rate of heat loss per second
+      };
+
+      let isRunning = false;
+      let intervalId = null;
+
+      function startSimulation() {
+        if (!isRunning) {
+          intervalId = setInterval(updateEngine, 50); // Update every 50ms
+          isRunning = true;
+        }
+      }
+
+      function updateEngine() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Simulate heat exchange with surroundings
+        const heatExchange = (engine.temperature - 300) * engine.heatLossRate;
+        engine.temperature -= heatExchange;
+
+        // Draw cylinder
+        ctx.fillStyle = "#ddd";
+        ctx.fillRect(
+          canvas.width / 2 - engine.cylinderWidth / 2,
+          canvas.height / 2 - engine.cylinderHeight / 2,
+          engine.cylinderWidth,
+          engine.cylinderHeight
+        );
+
+        // Draw piston
+        ctx.fillStyle = "#007bff";
+        ctx.fillRect(
+          canvas.width / 2 - engine.pistonWidth / 2,
+          engine.pistonY - engine.pistonHeight / 2,
+          engine.pistonWidth,
+          engine.pistonHeight
+        );
+
+        // Draw crankshaft
+        ctx.fillStyle = "#555";
+        ctx.beginPath();
+        ctx.moveTo(engine.crankCenterX, engine.crankCenterY);
+        const crankX =
+          engine.crankCenterX +
+          engine.crankRadius * Math.cos(engine.crankAngle);
+        const crankY =
+          engine.crankCenterY +
+          engine.crankRadius * Math.sin(engine.crankAngle);
+        ctx.lineTo(crankX, crankY);
+        ctx.lineWidth = 10;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        // Draw connecting rod
+        ctx.beginPath();
+        ctx.moveTo(crankX, crankY);
+        ctx.lineTo(canvas.width / 2, engine.pistonY);
+        ctx.stroke();
+
+        // Update piston position based on crankshaft movement
+        engine.pistonY =
+          engine.crankCenterY +
+          engine.crankRadius * Math.sin(engine.crankAngle);
+
+        // Update crank angle for next frame
+        engine.crankAngle += 0.05;
+
+        // Draw valve (open/close based on temperature)
+        ctx.fillStyle = "#ff6347";
+        if (engine.temperature > engine.heatSourceTemperature - 50) {
+          engine.valveOpen = true;
+          ctx.fillRect(
+            engine.valveX,
+            engine.valveY,
+            engine.valveWidth,
+            engine.valveHeight
+          );
+        } else {
+          engine.valveOpen = false;
+          ctx.fillRect(
+            engine.valveX,
+            engine.valveY,
+            engine.valveWidth,
+            engine.valveHeight / 2
+          );
+        }
+
+        // Display temperature
+        ctx.fillStyle = "#000";
+        ctx.font = "16px Arial";
+        ctx.fillText(`Temperature: ${engine.temperature.toFixed(2)} K`, 20, 30);
+      }
+    </script>
+  </body>
+</html>
